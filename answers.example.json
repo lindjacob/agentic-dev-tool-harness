@@ -1,0 +1,41 @@
+{
+  "$schema": "./answers.schema.json",
+  "harness_version": "0.1.0",
+  "project": {
+    "name": "Acme API",
+    "description": "Billing API that turns metered usage into invoices for B2B customers.",
+    "repo": "acme/api"
+  },
+  "roles": {
+    "maintainer": "human maintainer"
+  },
+  "workflow": {
+    "task_runner": "pnpm",
+    "verify_cmd": "pnpm lint && pnpm typecheck && pnpm test",
+    "monorepo": true
+  },
+  "provider": {
+    "name": "github",
+    "dependency_tracking": true
+  },
+  "targets": ["cursor", "claude", "codex"],
+  "features": {
+    "docs_audit": true,
+    "enforcement": true
+  },
+  "docs": {
+    "areas": ["architecture"]
+  },
+  "policy": [
+    {
+      "command": "gh pr merge",
+      "decision": "forbidden",
+      "why": "The maintainer owns merges; agents stop at the open PR (use `land`, run by a human)."
+    },
+    {
+      "command": "git push --force",
+      "decision": "prompt",
+      "why": "Force-push is destructive; confirm before rewriting remote history."
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/lindjacob/agent-scaffold/main/answers.schema.json",
+  "title": "Agent scaffold answers",
+  "description": "The parameterization seam. Copy answers.example.json, fill it in, and pass it to bin/init.mjs with --answers. Every {{placeholder}} and conditional block in template/ resolves from these values. Unknown keys (such as $schema) are ignored. This schema is documentation + editor support only; init.mjs does not validate against it (it applies defaults for omitted fields).",
+  "type": "object",
+  "required": ["project", "workflow"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional path to this schema, for editor validation/autocomplete."
+    },
+    "scaffold_version": {
+      "type": "string",
+      "default": "0.1.0",
+      "description": "Version of agent-scaffold used when generating; informational only."
+    },
+    "project": {
+      "type": "object",
+      "required": ["name", "description"],
+      "properties": {
+        "name": { "type": "string", "description": "Human name, e.g. \"Acme API\"." },
+        "description": {
+          "type": "string",
+          "description": "One sentence: what the repo is and the value it delivers."
+        },
+        "repo": {
+          "type": "string",
+          "default": "owner/name",
+          "description": "\"owner/name\"; only meaningful when provider.name == github."
+        }
+      }
+    },
+    "roles": {
+      "type": "object",
+      "properties": {
+        "maintainer": {
+          "type": "string",
+          "default": "human maintainer",
+          "description": "Substituted everywhere the origin said \"Founder\"."
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "required": ["verify_cmd"],
+      "properties": {
+        "task_runner": {
+          "enum": ["direct", "make", "just", "npm", "pnpm", "yarn", "cargo-make"],
+          "default": "direct",
+          "description": "How verbs are invoked. 'direct' => skills call ./scripts/workon; 'just' emits a justfile; other runners emit a NOTICE to wire the verbs (the scaffolder never edits an existing manifest)."
+        },
+        "verify_cmd": {
+          "type": "string",
+          "description": "The verification gate run before `done`, e.g. \"make check\" or \"pnpm lint && pnpm test\"."
+        },
+        "monorepo": {
+          "type": "boolean",
+          "default": false,
+          "description": "true expands apps/ + packages/ layout prose in AGENTS.md; false collapses it."
+        }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "enum": ["github"],
+          "default": "github",
+          "description": "The forge/tracker behind the verb contract. Only github is implemented today."
+        },
+        "dependency_tracking": {
+          "type": "boolean",
+          "default": true,
+          "description": "github: native \"Blocked by\" relations + the no-Prerequisites rule."
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "default": ["cursor", "claude", "codex"],
+      "items": { "enum": ["cursor", "claude", "codex"] },
+      "description": "Which agent-tool outputs to render."
+    },
+    "features": {
+      "type": "object",
+      "properties": {
+        "docs_audit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Install audit-docs (requires Node at use time) + its CI step."
+        },
+        "enforcement": {
+          "type": "boolean",
+          "default": true,
+          "description": "Compile policy into each target's native blocking mechanism."
+        }
+      }
+    },
+    "docs": {
+      "type": "object",
+      "properties": {
+        "areas": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Generates docs/index.md entries; you write the content. e.g. [\"architecture\"]."
+        }
+      }
+    },
+    "policy": {
+      "type": "array",
+      "description": "Command denials, compiled per target: cursor -> .cursor/hooks.json beforeShellExecution (failClosed); claude -> .claude/settings.json permissions.deny/ask; codex -> .codex/rules/harness.rules prefix_rule. Only command-level rules are enforceable.",
+      "items": {
+        "type": "object",
+        "required": ["command", "decision"],
+        "properties": {
+          "command": { "type": "string", "description": "Command prefix, e.g. \"gh pr merge\"." },
+          "decision": {
+            "enum": ["forbidden", "prompt"],
+            "description": "forbidden blocks the command; prompt asks for confirmation."
+          },
+          "why": {
+            "type": "string",
+            "description": "Human-readable justification, surfaced in prompts/blocks."
+          }
+        }
+      }
+    }
+  }
+}
