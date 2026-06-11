@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// Deterministic agent-scaffold. Reads an answers file, substitutes the parameterization seam,
-// and emits only the selected tool targets and provider. See README.md and answers.schema.json.
+// Deterministic scaffolder for agentic-dev-tool-harness. Reads an answers file, substitutes the
+// parameterization seam, and emits only the selected tool targets and provider. See README.md and
+// answers.schema.json.
 //
-// Zero runtime dependencies: clone agent-scaffold and run with Node alone, no install step.
+// Zero runtime dependencies: clone the harness and run with Node alone, no install step.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -39,7 +40,7 @@ function parseArgs(argv) {
 function withDefaults(a) {
   const d = a || {};
   return {
-    scaffold_version: d.scaffold_version ?? "0.1.0",
+    harness_version: d.harness_version ?? "0.1.0",
     project: {
       name: d.project?.name ?? "Your Project",
       description: d.project?.description ?? "",

@@ -1,11 +1,11 @@
 {
-  "name": "agent-scaffold",
+  "name": "agentic-dev-tool-harness",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Scaffold an agent-ready repo with cross-tool skills, docs discipline, and a GitHub workflow.",
   "bin": {
-    "agent-scaffold": "bin/init.mjs"
+    "agentic-dev-tool-harness": "bin/init.mjs"
   },
   "scripts": {
     "init": "node bin/init.mjs"

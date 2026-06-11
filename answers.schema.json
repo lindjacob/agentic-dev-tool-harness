@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://raw.githubusercontent.com/lindjacob/agent-scaffold/main/answers.schema.json",
-  "title": "Agent scaffold answers",
+  "$id": "https://raw.githubusercontent.com/lindjacob/agentic-dev-tool-harness/main/answers.schema.json",
+  "title": "Agent harness answers",
   "description": "The parameterization seam. Copy answers.example.json, fill it in, and pass it to bin/init.mjs with --answers. Every {{placeholder}} and conditional block in template/ resolves from these values. Unknown keys (such as $schema) are ignored. This schema is documentation + editor support only; init.mjs does not validate against it (it applies defaults for omitted fields).",
   "type": "object",
   "required": ["project", "workflow"],
@@ -10,10 +10,10 @@
       "type": "string",
       "description": "Optional path to this schema, for editor validation/autocomplete."
     },
-    "scaffold_version": {
+    "harness_version": {
       "type": "string",
       "default": "0.1.0",
-      "description": "Version of agent-scaffold used when generating; informational only."
+      "description": "Version of the harness used when generating; informational only."
     },
     "project": {
       "type": "object",

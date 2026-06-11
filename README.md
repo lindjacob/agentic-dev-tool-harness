@@ -1,4 +1,4 @@
-# agent-scaffold
+# agentic-dev-tool-harness
 
 > Scaffold an agent-ready repo in one shot.
 
