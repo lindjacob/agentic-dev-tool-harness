@@ -11,10 +11,11 @@ implementation to a worker, reviews the diff, verifies, handles docs, and opens 
    make.
 3. **Get plan sign-off.** Share the plan with the {{maintainer}} in chat. Wait for explicit approval
    before implementing. Iterate the plan if asked.
-4. **Delegate implementation.** Launch an implementation subagent using the most capable
-   implementation model your agent tool offers. Build its prompt by including the full contents of
-   [`../assets/worker-prompt.md`](../assets/worker-prompt.md) verbatim, then appending the issue
-   body/comments, the approved plan, relevant rules/ADRs, and the acceptance criteria.
+4. **Delegate implementation.** Launch an implementation subagent using newest cursor `composer`,
+   - use the newest claude `sonnet` when `composer` is unavailables. Build its prompt by including
+   the full contents of [`../assets/worker-prompt.md`](../assets/worker-prompt.md) verbatim, then
+   appending the issue body/comments, the approved plan, relevant rules/ADRs, and the acceptance
+   criteria.
 5. **Review returned work.** Inspect the diff yourself; do not trust the subagent summary. Check
    acceptance criteria, non-goals, conventions, bugs, tests, and whether documentation may be needed.
    If incomplete or poor, launch another implementation subagent with precise corrective
