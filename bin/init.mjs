@@ -22,6 +22,7 @@ const UNIVERSAL_SKILLS = ["write-adr", "write-docs", "audit-docs"];
 const PROJECT_SKILLS = ["work-on-issue", "write-issue", "review-pr"];
 
 const notices = [];
+const conflicts = [];
 
 // ---------------------------------------------------------------------------------------- args
 function parseArgs(argv) {
@@ -30,7 +31,6 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === "--answers") out.answers = argv[++i];
     else if (a === "--out") out.out = argv[++i];
-    else if (a === "--force") out.force = true;
     else if (a === "-h" || a === "--help") out.help = true;
   }
   return out;
@@ -126,19 +126,35 @@ function renderStr(tpl, ctx) {
 }
 
 // ----------------------------------------------------------------------------------- fs helpers
+// Never destructive: identical existing files are skipped (re-runs are idempotent); differing
+// existing files are kept and the rendered version lands alongside as `<file>.harness-new` for a
+// human or agent to merge (see skills/install-harness). Returns the path actually written, or
+// null when skipped.
+function writeOut(destAbs, content) {
+  if (fs.existsSync(destAbs)) {
+    if (fs.readFileSync(destAbs, "utf8") === content) return null;
+    const alt = `${destAbs}.harness-new`;
+    fs.writeFileSync(alt, content);
+    conflicts.push(destAbs);
+    return alt;
+  }
+  fs.mkdirSync(path.dirname(destAbs), { recursive: true });
+  fs.writeFileSync(destAbs, content);
+  return destAbs;
+}
+
 function emitFile(srcAbs, destAbs, ctx, { collapseBlank = false } = {}) {
   const raw = fs.readFileSync(srcAbs, "utf8");
   let rendered = renderStr(raw, ctx);
   // Conditional blocks can leave doubled blank lines; tidy prose context files.
   if (collapseBlank) rendered = rendered.replace(/\n{3,}/g, "\n\n");
-  fs.mkdirSync(path.dirname(destAbs), { recursive: true });
-  fs.writeFileSync(destAbs, rendered);
-  if (rendered.startsWith("#!")) fs.chmodSync(destAbs, 0o755);
+  const written = writeOut(destAbs, rendered);
+  if (written && rendered.startsWith("#!")) fs.chmodSync(written, 0o755);
+  return written;
 }
 
 function emitText(content, destAbs) {
-  fs.mkdirSync(path.dirname(destAbs), { recursive: true });
-  fs.writeFileSync(destAbs, content);
+  return writeOut(destAbs, content);
 }
 
 function renderCopyTree(srcDir, destDir, ctx, skip = () => false) {
@@ -209,7 +225,7 @@ function codexRules(policy) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help || !args.answers || !args.out) {
-    console.log("Usage: node bin/init.mjs --answers <answers.json> --out <target-repo> [--force]");
+    console.log("Usage: node bin/init.mjs --answers <answers.json> --out <target-repo>");
     process.exit(args.help ? 0 : 1);
   }
 
@@ -218,10 +234,6 @@ function main() {
 
   if (a.provider.name !== "github") {
     console.error(`provider "${a.provider.name}" is not implemented (only "github").`);
-    process.exit(1);
-  }
-  if (fs.existsSync(out) && fs.readdirSync(out).length > 0 && !args.force) {
-    console.error(`target ${out} is not empty; pass --force to scaffold into it anyway.`);
     process.exit(1);
   }
 
@@ -306,9 +318,8 @@ function main() {
   if (a.features.enforcement) {
     if (a.targets.includes("cursor")) {
       emitText(cursorHooksJson(), path.join(out, ".cursor", "hooks.json"));
-      const hook = path.join(out, ".cursor", "hooks", "harness-policy.sh");
-      emitText(cursorHookScript(a.policy), hook);
-      fs.chmodSync(hook, 0o755);
+      const hook = emitText(cursorHookScript(a.policy), path.join(out, ".cursor", "hooks", "harness-policy.sh"));
+      if (hook) fs.chmodSync(hook, 0o755);
     }
     if (a.targets.includes("claude")) {
       emitText(claudeSettings(a.policy), path.join(out, ".claude", "settings.json"));
@@ -331,6 +342,12 @@ function main() {
   console.log(`Scaffolded ${a.project.name} into ${out}`);
   console.log(`  targets: ${a.targets.join(", ")} | provider: ${a.provider.name} | runner: ${runner}`);
   for (const n of notices) console.log(`  NOTE: ${n}`);
+  if (conflicts.length > 0) {
+    console.log(
+      `  ${conflicts.length} conflict(s) — existing files were kept; rendered versions written alongside as *.harness-new. Merge each (see skills/install-harness), then delete the .harness-new file:`,
+    );
+    for (const c of conflicts) console.log(`  CONFLICT: ${path.relative(out, c)}`);
+  }
 }
 
 main();

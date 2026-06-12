@@ -75,6 +75,18 @@ no `npm install` step.
 
 ## Use it
 
+### Agent-guided install (recommended, and the only sane path for non-empty repos)
+
+Clone this repo, open it in your agent tool, and point the agent at
+[`skills/install-harness/SKILL.md`](skills/install-harness/SKILL.md):
+
+> Follow skills/install-harness/SKILL.md to install the harness into /path/to/your/repo.
+
+The agent inspects your repo, proposes `answers.json`, gets your sign-off, runs the deterministic
+scaffolder, and walks you through merging any conflicts with existing files.
+
+### Manual install
+
 1. Copy `answers.example.json` to `answers.json` and fill it in. `answers.schema.json` documents
    every field and gives editors validation/autocomplete (the example references it via `$schema`).
 2. Run the scaffolder against your target repo:
@@ -88,6 +100,11 @@ no `npm install` step.
 3. The scaffolder emits only the tool targets and provider you selected. Init runs from this repo;
    your target repo gets the generated files and nothing else to uninstall.
 
+In both flows the scaffolder is never destructive and re-runs are idempotent: files identical to
+the rendered output are skipped, and a file that already exists with different content is kept —
+the rendered version lands alongside it as `<file>.harness-new` with a `CONFLICT:` line in the
+output, for you (or the install skill) to merge and delete.
+
 ## Repository layout
 
 ```text
@@ -96,6 +113,7 @@ template/universal/   methodology skills, independent of stack/forge/layout (car
 template/project/     skills + AGENTS context coupled to workflow/provider/structure
 template/providers/   per-provider verb implementations (github/ today) + provider artifacts
 bin/init.mjs          deterministic scaffolder: substitute, select targets/provider, compile policy
+skills/install-harness/  the agent-guided install procedure (runs here, never installed into consumers)
 docs/decisions/       this project's own ADRs (the decisions above)
 answers.schema.json   the parameterization seam (JSON Schema: docs + editor support)
 docs/contributing.md  how to harvest improvements from a real project back into the harness
